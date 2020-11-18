@@ -250,7 +250,45 @@ associated with the task to configure. Take a look at a contract for the
         msg: "The warping kernel size must be consistent between makeWarp and 
               assembleCoadd tasks"
 
-It is important to note how ``contracts`` relate to ``parameters``.
+It is important to note how ``contracts`` relate to ``parameters``. While a
+``parameter`` can be used to set two configuration variables to the same
+value at the time `Pipeline` definition is read, it does not offer any
+validation. It is possible for someone to change the configuration of one of
+the fields before a `Pipeline` is run. Because of this, ``contracts`` should
+always be written without regards to how ``parameters`` are used.
 
-subsets
+Subsets
 -------
+`Pipelines` are the definition of a processing workflow from some input data
+products to some output data products. Frequently, however, there are sub
+units within a `Pipeline` that define a useful unit of the `Pipeline` to run
+on their own. This may be something like processing single frames only.
+
+You, as the author of the `Pipeline`, can define one or more of the
+processing units by creating a section in your `Pipeline` named ``subsets``.
+The value associated with the ``subsets`` key is a new mapping. The keys of
+this mapping will be the labels used to refer to an individual ``subset``.
+The values of this mapping can either be a yaml list of the tasks labels to
+be associated with this subset, or another yaml mapping. If it is the latter,
+the keys must be ``subset``, which is associated with the yaml list of task
+labels, and ``description``, which is associated with a descriptive message
+of what the subset is meant to do. Take a look at the following two examples
+which show the same ``subset`` defined in both styles.
+
+.. code-block:: yaml
+
+  subsets:
+    processCcd:
+      - isr
+      - characterizeImage
+      - calibrate
+
+.. code-block:: yaml
+
+  subsets:
+    processCcd:
+      subset:
+        - isr
+        - characterizeImage
+        - calibrate
+      description: A set of tasks to run when doing single frame processing
