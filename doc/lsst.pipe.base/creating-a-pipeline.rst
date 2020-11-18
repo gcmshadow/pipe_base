@@ -161,6 +161,48 @@ the previous one to use the ``python`` key.
       python: "config.warpAndPsfMatch.psfMatch.kernel['AL'].alardSigGauss = \
         [1.0, 2.0, 4.5]"
 
+Parameters
+----------
+As you saw in the pervious section, each task defined in a `Pipeline` may
+have its own configuration. However, it is sometimes useful for configuration
+fields in multiple tasks to share the same value. `Pipeline`\ s support this
+with a concept called ``parameters``. This is a top level section in the
+`Pipeline` document specified with a key named ``parameters``.
+
+The contents of the ``parameters`` section is a mapping of key, value pairs
+where the key is any name chosen by the `Pipeline` author. These keys
+(preceded by ``parameters.``) can be used in a tasks config block to indicate
+that the value of that configuration field should be filled in with the
+associated value in the parameters section.
+
+To make this a bit clearer take a look at the following example, making note
+that only config fields relevant for this example are shown.
+
+.. code-block:: yaml
+
+  parameters:
+    calibratedSingleFrame: calexp
+  tasks:
+    calibrate:
+      class: lsst.pipe.tasks.calibrate.CalibrateTask
+      config:
+        connections.outputExposure = parameters.calibratedSingleFrame
+    makeWarp:
+      class: lsst.pipe.tasks.makeCoaddTempExp.MakeWarpTask
+      config:
+        connections.calExpList = parameters.calibratedSingleFrame
+    forcedPhotCcd:
+      class: lsst.meas.base.forcedPhotCcd.ForcedPhotCcdTask
+      config:
+        connections.exposure = parameters.calibratedSingleFrame
+
+The above example used ``parameters`` to link the dataset type names for
+multiple tasks, but ``parameters`` can be used anywhere that more than one
+config field use the same value.
+
+FINDME introduces how to run `Pipeline`\ s and will talk about how to
+dynamically set a parameters value at `Pipeline` invocation time.
+
 Verifying Configuration: Contracts
 ----------------------------------
 The `~lsst.pipe.base.config.Config` classes associated with
@@ -207,6 +249,8 @@ associated with the task to configure. Take a look at a contract for the
                    assembleCoadd.matchingKernelSize"
         msg: "The warping kernel size must be consistent between makeWarp and 
               assembleCoadd tasks"
+
+It is important to note how ``contracts`` relate to ``parameters``.
 
 subsets
 -------
