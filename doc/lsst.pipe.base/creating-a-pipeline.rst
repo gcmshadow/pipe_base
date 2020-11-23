@@ -20,8 +20,10 @@ configuring tasks, verifying configuration, specifying subsets of tasks,
 creating `Pipeline`\ s using composition, a basic introduction to running
 `Pipeline`\ s, and discussing common conventions when creating `Pipelines`.
 
+----------------
 A Basic Pipeline
 ----------------
+
 `Pipeline` documents are written using yaml syntax. If you are unfamiliar with 
 yaml, there are many guides across the internet, but the basic idea is that it
 is a simple markup language to describe key, value mappings, and lists of
@@ -90,8 +92,10 @@ execution graph of the specified tasks. A consequence of this is if a
 pipeline does not define all the tasks required to generate all needed inputs
 and outputs it will get caught before any execution occurs.
 
+-----------------
 Configuring Tasks
 -----------------
+
 Often `PipelineTasks` (and their subtasks) contain a multitude of
 configuration options that alter the way the task executes. Because
 `Pipeline`\ s are designed to do a specific type of processing (per the
@@ -161,18 +165,17 @@ the previous one to use the ``python`` key.
       python: "config.warpAndPsfMatch.psfMatch.kernel['AL'].alardSigGauss = \
         [1.0, 2.0, 4.5]"
 
+----------
 Parameters
 ----------
+
 As you saw in the pervious section, each task defined in a `Pipeline` may
 have its own configuration. However, it is sometimes useful for configuration
 fields in multiple tasks to share the same value. `Pipeline`\ s support this
 with a concept called ``parameters``. This is a top level section in the
 `Pipeline` document specified with a key named ``parameters``.
 
-The contents of the ``parameters`` section is a mapping of key, value pairs
-where the key is any name chosen by the `Pipeline` author. These keys
-(preceded by ``parameters.``) can be used in a tasks config block to indicate
-that the value of that configuration field should be filled in with the
+The contents of the ``parameters`` section is a mapping of key, value pair-
 associated value in the parameters section.
 
 To make this a bit clearer take a look at the following example, making note
@@ -200,11 +203,14 @@ The above example used ``parameters`` to link the dataset type names for
 multiple tasks, but ``parameters`` can be used anywhere that more than one
 config field use the same value.
 
-FINDME introduces how to run `Pipeline`\ s and will talk about how to
-dynamically set a parameters value at `Pipeline` invocation time.
+:ref:`pipeline-running-intro` introduces how to run `Pipeline`\ s and will
+talk about how to dynamically set a parameters value at `Pipeline` invocation
+time.
 
+----------------------------------
 Verifying Configuration: Contracts
 ----------------------------------
+
 The `~lsst.pipe.base.config.Config` classes associated with
 `~lsst.pipe.base.task.Task`\ s provide a method named ``verify`` which can be
 used to verify that all supplied configuration is valid. These verify methods
@@ -257,8 +263,10 @@ validation. It is possible for someone to change the configuration of one of
 the fields before a `Pipeline` is run. Because of this, ``contracts`` should
 always be written without regards to how ``parameters`` are used.
 
+-------
 Subsets
 -------
+
 `Pipelines` are the definition of a processing workflow from some input data
 products to some output data products. Frequently, however, there are sub
 units within a `Pipeline` that define a useful unit of the `Pipeline` to run
@@ -292,3 +300,22 @@ which show the same ``subset`` defined in both styles.
         - characterizeImage
         - calibrate
       description: A set of tasks to run when doing single frame processing
+
+Once a ``subset`` is created, the label associated with it, can be used in
+any context where task labels are accepted. Examples of this will be shown in
+the following sections.
+
+-----------
+Inheritance
+-----------
+
+Similar to ``subsets``, which allow defining useful units within a
+`Pipeline`, it is sometimes useful to construct a `Pipeline` out of other
+`Pipelines`. This is known as `Pipeline` inheritance.
+
+
+.. _pipeline-running-intro:
+
+---------------------------------
+Introduction to running Pipelines
+---------------------------------
