@@ -17,8 +17,9 @@ documents that create a specification that is used to run one or more
 `PipelineTask`\ s. This how-to guide guide will introduce you to the basic
 syntax of a `Pipeline` document, and progressively take you through;
 configuring tasks, verifying configuration, specifying subsets of tasks,
-creating `Pipeline`\ s using composition, a basic introduction to running
-`Pipeline`\ s, and discussing common conventions when creating `Pipelines`.
+creating `Pipeline`\ s using composition, a basic introduction to options
+when running `Pipeline`\ s, and discussing common conventions when creating
+`Pipelines`.
 
 ----------------
 A Basic Pipeline
@@ -310,12 +311,97 @@ Inheritance
 -----------
 
 Similar to ``subsets``, which allow defining useful units within a
-`Pipeline`, it is sometimes useful to construct a `Pipeline` out of other
+`Pipeline`, it's sometimes useful to construct a `Pipeline` out of other
 `Pipelines`. This is known as `Pipeline` inheritance.
 
+Inheriting other pipelines begins with a top level key named ``inherits``.
+The value associated with this key is a yaml list. The values of this list
+may be strings corresponding to a filesystem path of the `Pipeline` to
+inherit. These paths may contain environment variables to help in writing
+paths in a platform agnostic way.
+
+Alternatively the elements of the inherits list may be be yaml mapping. This
+mapping begins with a key named ``location`` who's value is the same as the
+path described above. The mapping can optionally contain the keys
+``include``, ``exclude``, and ``importContracts``. The keys ``include`` and
+``exclude`` can be used to specify which labels (or labeled subsets) to
+include or exclude, respectively, when inheriting a ``Pipeline``. The values
+associated with these keys are specified as a yaml list, and these two keys
+are mutually exclusive, only one can be specified at at time. The
+``importContracts`` key is optional and is associated with a boolean value
+that controls wether ``contracts`` from the imported pipeline should be
+included when importing, with a default value of true.
+
+The order that `Pipelines` are listed in the `inherits` section is not
+important. Another thing to note is that declared labels must be unique
+amongst all inherited `Pipelines`.
+
+Once one or more pipelines is inherited the ``PipelineTask``\ s defined in
+the ``tasks`` section are considered. If any new ``labels`` are declared they
+simply extend the total `Pipeline`.
+
+If a ``label`` declared in the the ``tasks`` section was declared in one of
+the imported ``Pipelines``, one of two things happen. If the label is
+associated with the same `PipelineTask` that was declared in the inherited
+pipeline, this definition will be extended. This means that any configs
+declared in the inherited `Pipeline` will be merged with configs declared in
+the current `Pipeline` with the current declaration taking config precedence.
+This behavior allows tasks to be extended in the current `Pipeline`.
+
+If the ``label`` declared in the current `Pipeline` is associated with a
+different `PipelineTask` than that of the inherited declaration, then the
+label with be considered re-declared and the declaration in the current
+`Pipeline` will be used when processing the complete pipeline. The
+declaration defined in the inherited `Pipeline` dropped.
+
+
+-------------------------------------
+obs\_* package overrides for Pipelines
+-------------------------------------
+
+Pipeline files support automatically loading configuration files defined in
+obs packages though a top level key named `instrument`. The value associated
+with this key is a string representing the fully qualified class name of the
+python camera object. For instance for obs_subaru this would look like:
+
+.. code-block:: yaml
+
+  instrument: lsst.obs.subaru.HyperSuprimeCam
+
+The ``instrument`` is available to all `Pipelines`, but by conventions obs\_*
+packages typically will additionally make `Pipelines` that are customized for
+the instrument they represent. This includes relevant configs, `PipelineTask`
+(re)declarations, instrument label, etc. These pipelines can be found inside
+a directory named `pipelines` that lives at the root of each obs\_ package.
+
+These `Pipeline`\ s enable you to run a `Pipeline` that is configured for the
+desired camera, or to inherit from
 
 .. _pipeline-running-intro:
 
 ---------------------------------
-Introduction to running Pipelines
+Commandline options for running Pipelines
 ---------------------------------
+
+
+------------------------
+PipelineTask conventions
+------------------------
+
+Below is a list of conventions that are commonly used when writing
+`Pipelines`\ s. These are not hard requirements, but their use helps maintain
+consistency throughout the software stack.
+
+* The name of a Pipeline file should follow class naming conventions (camel
+  case with first letter capital).
+* Preface a Pipeline name with an underscore if it is not intended to be
+  inherited and or run directly (its part of a larger pipeline).
+* Use inheritance to avoid really long documents, using 'private' `Pipeline`\ s
+  named as above.
+* `Pipeline`\ s should contain a useful description of what the `Pipeline` is
+  intended to do.
+* `Pipeline`\ s be placed in a directory called ``pipelines`` at the top level
+  of a package.
+* Instrument packages should provide `Pipeline`\ s that override standard
+* `Pipeline`\ s and are specifically configured for that instrument (if
+  applicable).
